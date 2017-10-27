@@ -1,73 +1,80 @@
+//******
+// * File establishes creates an Oauth client 
+// * getInstallUrl() generate a redirect url to install app on user account
+// * authorize() sets our credentials to be that user
+// * createNewToken() generates a new access token when given a access code
+//******
+
 var fs = require('fs');
-var readline = require('readline');
-var google = require('googleapis');
-var googleAuth = require('google-auth-library');
+import googleAuth from 'google-auth-library';
+import google from 'googleapis'
 import credentials from './client_secret.json';
 import Promise from 'bluebird'; 
+import {storeToken, getToken} from '../../db.js'
+
+var clientSecret = credentials.web.client_secret,
+    clientId = credentials.web.client_id,
+    redirectUrl = credentials.web.redirect_uris[0],
+    auth = new googleAuth(),
+    oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
 
-// If modifying these scopes, delete your previously saved credentials
-// at ~/.credentials/drive-nodejs-quickstart.json
-var SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/drive.file'];
-var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
-    process.env.USERPROFILE) + '/.credentials/';
-var TOKEN_PATH = TOKEN_DIR + 'drive-nodejs-quickstart.json';
 
-export function authorize() {
+export function getUser(token) {
   
-  return new Promise( (resolve, reject) => {
-
-    var clientSecret = credentials.installed.client_secret,
-    		clientId = credentials.installed.client_id,
-    		redirectUrl = credentials.installed.redirect_uris[0],
-    		auth = new googleAuth(),
-    		oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
-
-    // Check if we have previously stored a token.
-    fs.readFile(TOKEN_PATH, (err, token) => {
-
-      if (err) {
-        getNewToken(oauth2Client)
-        .then( (newAuth) => {
-          resolve(newAuth);
-        })
-        .catch( (error) => {
-          reject(error);
-        });
-
-      } else {
-        oauth2Client.credentials = JSON.parse(token);
-        resolve(oauth2Client);
-      }
-
-    });
+  return new Promise((resolve, reject) => {
+      oauth2Client.credentials = token;
+      
+      var oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+      
+      oauth2.userinfo.get(function(err, response) {
+        !err ? resolve(response) : reject(err);
+      });
 
   });
+}
 
-};
 
-const getNewToken = (oauth2Client) => {
-
+export function getInstallUrl(scopes) {
   return new Promise( (resolve, reject) => {
 
     // authorize app through console
     var authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: SCOPES
+      scope: scopes
     });
 
-    // tell the user to get the auth code
-    console.log('Authorize this app by visiting this url: ', authUrl);
+    if(authUrl) {
+      resolve(authUrl);
+    } else {
+      reject("could not generate authUrl. Please make sure the app exists.");
+    }
+    
+  });
+}
 
-    // initiate console input
-    var rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
 
-    // ask for the code
-    rl.question('Enter the code from that page here: ', function(code) {
-      rl.close();
+export function authorize(key) {
+  
+  return new Promise( (resolve, reject) => {
+
+    // Check if we have previously stored a token.
+    getToken(key)
+    .then( token => {
+        oauth2Client.credentials = token;
+        resolve(oauth2Client);
+    })
+    .catch( err => {
+      reject(err);
+    })
+  });
+
+};
+
+
+export function createNewToken(code) {
+
+  return new Promise( (resolve, reject) => {
 
       // get the token
       oauth2Client.getToken(code, function(err, token) {
@@ -78,29 +85,16 @@ const getNewToken = (oauth2Client) => {
           return;
         }
 
-        oauth2Client.credentials = token;
-        storeToken(token);
-        resolve(oauth2Client);
+        storeToken(token).then( key => {
+          resolve(key);
+        }).catch( error => {
+          reject(error);
+        });
+        
       });
     });
 
-  });
 };
 
-/**
- * Store token to disk be used in later program executions.
- *
- * @param {Object} token The token to store to disk.
- */
-const storeToken = (token) => {
-  try {
-    fs.mkdirSync(TOKEN_DIR);
-  } catch (err) {
-    if (err.code != 'EXIST') {
-      throw err;
-    }
-  }
-  fs.writeFile(TOKEN_PATH, JSON.stringify(token));
-  console.log('Token stored to ' + TOKEN_PATH);
-}
+
 

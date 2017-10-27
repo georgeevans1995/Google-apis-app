@@ -1,62 +1,62 @@
 import Promise from 'bluebird';
 import google from 'googleapis';
 var fs = require('fs');
+import { authorize } from '../auth';
 
-export function saveFiles(auth, files, folder) {
+export function saveFiles(key, files, folder) {
 
 	return new Promise((resolve, reject) => {
 		
-		var drive = google.drive('v3');
-		var drive = google.drive({ version: 'v3', auth: auth });
-		files = Array.isArray(files) ? files : [files];
-		var count = 0;
-		var numFiles = files.length;
-		
+		authorize(key).then( (auth) => {
 
-		getFolderId(folder, drive)
-		.then( (folder) => {
+			var drive = google.drive({ version: 'v3', auth: auth });
+			files = Array.isArray(files) ? files : [files];
+			var count = 0;
+			var numFiles = files.length;
 			
-			files.forEach( (file) => {
 
-				drive.files.create({
-					fields: 'id',
-				  resource: {
-				    name: file.name,
-				    mimeType: file.type,
-				    parents: [folder.id]
-				  },
-				  media: {
-				    mimeType: 'image/png',
-				    body: fs.createReadStream(file.path)
-				  }
-				}, function(err, response) {
-						if (!err) {
-							count++;
+			getFolderId(folder, drive)
+			.then( (folder) => {
+				
+				files.forEach( (file) => {
 
-							if (count == numFiles) {
-								resolve(response)
+					drive.files.create({
+						fields: 'id',
+					  resource: {
+					    name: file.name,
+					    mimeType: file.type,
+					    parents: [folder.id]
+					  },
+					  media: {
+					    mimeType: 'image/png',
+					    body: fs.createReadStream(file.path)
+					  }
+					}, function(err, response) {
+							if (!err) {
+								count++;
+
+								if (count == numFiles) {
+									resolve(response)
+								}
+								
 							}
-							
-						}
-						else {
-							reject({
-								"error": err
-							});
-						}
+							else {
+								reject({
+									"error": err
+								});
+							}
+						});
 					});
+				});
 
-			});
-		})
-
-		.catch( (error) => {
-
-			reject({
-				"error": error
 			})
+			.catch( (error) => {
+
+				reject({
+					"error": error
+				})
 		});
-
 	});
-
 };
 
 
