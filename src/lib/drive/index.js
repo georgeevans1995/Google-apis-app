@@ -1,3 +1,11 @@
+//******
+// * File is used for all interactions with google drive
+// * notice all calls to google drive are wrapped in authorize which ensure authentication each time
+// * saveFiles() Saves a file to a folder
+// * getFolderId() Searches drive for a folder (currently top level only)
+// * createFolder() Creates a folder if it doesnt exist (optional)
+//******
+
 import Promise from 'bluebird';
 import google from 'googleapis';
 var fs = require('fs');
@@ -8,18 +16,17 @@ export function saveFiles(key, files, folder) {
 	return new Promise((resolve, reject) => {
 		
 		authorize(key).then( (auth) => {
-
 			var drive = google.drive({ version: 'v3', auth: auth });
 			files = Array.isArray(files) ? files : [files];
-			var count = 0;
-			var numFiles = files.length;
-			
 
+			// get the parent folrder by name
 			getFolderId(folder, drive)
 			.then( (folder) => {
 				
+				// loop through each file thats being saved
 				files.forEach( (file) => {
 
+					// save to drive
 					drive.files.create({
 						fields: 'id',
 					  resource: {
@@ -33,11 +40,14 @@ export function saveFiles(key, files, folder) {
 					  }
 					}, function(err, response) {
 							if (!err) {
-								count++;
 
-								if (count == numFiles) {
-									resolve(response)
-								}
+								getFileInfo(response.id, drive)
+								.then(fileInfo => {
+									resolve(fileInfo);
+								})
+								.catch(err => {
+									reject(err);
+								});
 								
 							}
 							else {
@@ -95,7 +105,7 @@ export function getFolderId(name, drive, autoCreate = true) {
 
 }
 
-export function createFolder(name, drive) {
+export function createFolder (name, drive) {
 
 	return new Promise((resolve, reject) => {
 
@@ -117,4 +127,24 @@ export function createFolder(name, drive) {
 
 	});
 
+}
+
+export function getFileInfo (fileId, drive) {
+	
+	return new Promise( (resolve, reject) => {
+		
+		drive.files.get({
+			fileId: fileId,
+			fields: ['webViewLink', 'id', 'name', 'mimeType']
+		}, function(err, response) {
+			if (!err) {
+				resolve(response)
+			}
+			else {
+				reject({
+					"error": err
+				});
+			}
+		});
+	});
 }

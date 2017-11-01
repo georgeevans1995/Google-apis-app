@@ -1,13 +1,11 @@
 import { version } from '../../package.json';
 import { Router } from 'express';
 import facets from './facets';
-import { getInstallUrl, createNewToken } from '../lib/auth';
+import { getInstallUrl, createNewToken, removeAppCredentials } from '../lib/auth';
 import { saveFiles } from '../lib/drive';
 var formidable = require('express-formidable');
 
     
-
-
 export default ({ config, db }) => {
 	let api = Router();
 
@@ -40,6 +38,17 @@ export default ({ config, db }) => {
 
 	});
 
+	api.get('/revoke', (req, res) => {
+		var {id} = req.query; 
+		removeAppCredentials(id).then(response => {
+			console.log(response);
+			res.json(response);
+		}).catch( error => {
+			console.log(error);
+			res.json(error);
+		})
+	});
+
 	api.get('/success', (req, res) => {
 
 		if(req.query.code) {
@@ -59,12 +68,13 @@ export default ({ config, db }) => {
 
 		var { folder, key } = req.query,
 		files = req.files.file;
-
-		saveFiles(key, files, folder).then( (file) => {
-			res.json(file);
+		
+		saveFiles(key, files, folder)
+		.then( (file) => {
+			res.status( 200 ).json( file );
 		})
 		.catch( (err) => {
-			console.log(err);
+
 			res.json({
 				"reason": err.error.message,
 				"code": err.error.code
