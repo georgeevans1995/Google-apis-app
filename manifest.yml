@@ -1,11 +1,10 @@
+---
+declared-services:
 applications:
-  - instances: 1
-    timeout: 180
-    name: GoogleServicesAPI
-    buildpack: sdk-for-nodejs
-    command: 'npm prune --production && NODE_ENV=production npm start'
-    memory: 256M
-    domain: eu-gb.mybluemix.net
-    host: google-services
-    env:
-      NPM_CONFIG_PRODUCTION: false
+- name: Google services api
+  command: npm start
+  path: .
+  memory: 256M
+  instances: 1
+  env:
+    NPM_CONFIG_PRODUCTION: false
