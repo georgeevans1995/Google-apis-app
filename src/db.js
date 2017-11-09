@@ -12,7 +12,7 @@ const couch = new NodeCouchDb();
 import { getUser } from './lib/oauth2';
 
 export default callback => {
-	callback();
+	callback(couch);
 }
 
 export function storeToken(token) {

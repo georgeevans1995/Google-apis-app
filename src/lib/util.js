@@ -13,6 +13,7 @@ export function toRes(res, status=200) {
 		if (err) return res.status(500).send(err);
 
 		if (thing && typeof thing.toObject==='function') {
+			console.log(thing);
 			thing = thing.toObject();
 		}
 		res.status(status).json(thing);

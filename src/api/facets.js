@@ -10,13 +10,14 @@ export default ({ config, db }) => resource({
 	 *  Errors terminate the request, success sets `req[id] = data`.
 	 */
 	load(req, id, callback) {
-		let facet = facets.find( facet => facet.id===id ),
-			err = facet ? null : 'Not found';
-		callback(err, facet);
+		// let facet = facets.find( facet => facet.id===id ),
+			// err = facet ? null : 'Not found';
+		callback('error', 'read');
 	},
 
 	/** GET / - List all entities */
-	index({ params }, res) {
+	index(req, res) {
+		console.log(req)
 		res.json(facets);
 	},
 
@@ -29,6 +30,7 @@ export default ({ config, db }) => resource({
 
 	/** GET /:id - Return a given entity */
 	read({ facet }, res) {
+		console.log('test');
 		res.json(facet);
 	},
 

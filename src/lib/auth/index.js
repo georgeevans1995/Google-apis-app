@@ -32,7 +32,7 @@ export function getInstallUrl(scopes) {
     if(authUrl) {
       resolve(authUrl);
     } else {
-      reject("could not generate authUrl. Please make sure the app exists.");
+      reject({"error": "could not generate authUrl. Please make sure the app exists."});
     }
     
   });

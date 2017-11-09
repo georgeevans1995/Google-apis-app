@@ -1,26 +1,31 @@
 import { version } from '../../package.json';
 import { Router } from 'express';
-import facets from './facets';
-import { getInstallUrl, createNewToken, removeAppCredentials } from '../lib/auth';
 import { saveFiles } from '../lib/drive';
+import { getRealtime } from '../lib/analytics';
+import { getInstallUrl, createNewToken, removeAppCredentials } from '../lib/auth';
 var formidable = require('express-formidable');
+
 
     
 export default ({ config, db }) => {
 	let api = Router();
 
-	api.use( formidable({
+	// allow files to come through on the upload route
+	api.use('/drive/upload', formidable({
 		multiples: true
-	}) );
-	// mount the facets resource
-	api.use('/facets', facets({ config, db }));
+	}));
 
-	api.get('/', (req, res) => {		
+	api.get('/', (req, res) => {	
 		res.json({ version });
 	});
 
-
 	api.get('/auth', (req, res) => {
+		
+		if(!req.query.scopes) {
+			res.json({
+				"error": "please define an app scope to install"
+			})
+		}
 
 		var installServices = req.query.scopes.replace(/[\[\]]+/g, '').split(',');
 		var scopes = ['https://www.googleapis.com/auth/userinfo.profile'];
@@ -29,7 +34,8 @@ export default ({ config, db }) => {
 			scopes = scopes.concat(config.scopes[app]);
 		});
 		
-		getInstallUrl(scopes).then( (redirectUrl) => {
+		getInstallUrl(scopes).then( redirectUrl => {
+			
 			res.writeHead(302, {
 			  'Location': redirectUrl
 			});
@@ -66,10 +72,10 @@ export default ({ config, db }) => {
 
 	api.post('/upload', (req, res) => {
 
-		var { folder, key } = req.query,
+		var { folder, key, autoCreate } = req.query,
 		files = req.files.file;
 		
-		saveFiles(key, files, folder)
+		saveFiles(key, files, folder, autoCreate)
 		.then( (file) => {
 			res.status( 200 ).json( file );
 		})
@@ -79,6 +85,19 @@ export default ({ config, db }) => {
 				"reason": err.error.message,
 				"code": err.error.code
 			});
+		});
+		
+	});
+
+	api.get('/analytics', (req, res) => {
+		var { key } = req.query;
+		
+		getRealtime(key)
+		.then( (response) => {
+			res.status( 200 ).json( response );
+		})
+		.catch( (err) => {
+			res.json(err);
 		});
 		
 	});

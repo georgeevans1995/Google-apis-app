@@ -74,7 +74,7 @@ export function saveFiles(key, files, folder) {
 export function getFolderId(name, drive, autoCreate = true) {
 
 	return new Promise((resolve, reject) => {
-
+		// autoCreate = autoCreate === false ? false : true;
 	  drive.files.list({
 	  	q: "mimeType='application/vnd.google-apps.folder' and name = '" + name + "'"
 	  }, function (err, resp) {

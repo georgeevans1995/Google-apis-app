@@ -1,0 +1,9 @@
+---
+applications:
+- name: google-services
+  command: npm start
+  path: .
+  memory: 256M
+  instances: 1
+  env:
+    NPM_CONFIG_PRODUCTION: true
