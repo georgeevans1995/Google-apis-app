@@ -1,5 +1,4 @@
 ---
-declared-services:
 applications:
 - name: google-services
   command: npm start
