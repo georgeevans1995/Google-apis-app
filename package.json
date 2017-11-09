@@ -4,11 +4,20 @@
   "description": "Starter project for an ES6 RESTful Express API",
   "main": "dist",
   "scripts": {
-    "dev": "nodemon -w src --exec \"babel-node src --presets es2015,stage-0\"",
-    "build": "babel src -s -D -d dist --presets es2015,stage-0",
+    "dev": "nodemon -w server --exec \"babel-node server --presets es2015,stage-0\"",
+    "build": "babel server -s -D -d dist --presets es2015,stage-0",
     "start": "node dist",
+    "start:cluster": "sl-run server/index.js",
     "prestart": "npm run -s build",
-    "test": "eslint src"
+    "test": "eslint src",
+    "debug": "node --debug server/server.js",
+    "idt:build": "node idt.js build",
+    "idt:test": "node idt.js test",
+    "idt:debug": "node idt.js debug",
+    "idt:run": "node idt.js run",
+    "idt:deploy": "node idt.js deploy",
+    "idt:install": "node idt.js install",
+    "postinstall": "npm run build"
   },
   "eslintConfig": {
     "extends": "eslint:recommended",
@@ -37,9 +46,11 @@
     "cors": "^2.7.1",
     "couchdb": "^0.3.8",
     "express": "^4.13.3",
+    "express-formidable": "^1.0.0",
     "formidable": "^1.1.1",
     "google-auth-library": "^0.11.0",
     "googleapis": "^22.2.0",
+    "ibm-cloud-env": "^0",
     "morgan": "^1.8.0",
     "multer": "^1.3.0",
     "node-couchdb": "^1.2.0",
@@ -53,7 +64,10 @@
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-stage-0": "^6.5.0",
     "eslint": "^3.1.1",
-    "nodemon": "^1.9.2"
+    "nodemon": "^1.9.2",
+    "chalk": "^1.1.3",
+    "request": "^2.82.0",
+    "prompt-confirm": "^1.2.0"
   },
   "bugs": {
     "url": "https://github.com/developit/express-es6-rest-api/issues"
