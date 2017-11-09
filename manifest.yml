@@ -1,7 +1,7 @@
 ---
 declared-services:
 applications:
-- name: Google services api
+- name: google-services
   command: npm start
   path: .
   memory: 256M
