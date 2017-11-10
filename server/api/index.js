@@ -64,6 +64,7 @@ export default ({ config, db }) => {
 				res.json({"key": key});
 			})
 			.catch( (error) => {
+				console.log(error.message);
 				res.json(error);
 			});
 

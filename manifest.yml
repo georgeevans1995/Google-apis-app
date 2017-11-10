@@ -1,9 +1,15 @@
 ---
+declared-services:
+  cloudantNoSQLDB-service:
+    label: cloudantNoSQLDB
+    plan: Lite
 applications:
 - name: google-services
   command: npm start
   path: .
   memory: 256M
   instances: 1
+  services:
+  - Google services db
   env:
     NPM_CONFIG_PRODUCTION: false

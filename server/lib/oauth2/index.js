@@ -9,7 +9,7 @@
 import google from 'googleapis'
 import { authorize } from '../auth';
 
-export function getUser(oauth2Client) {
+export function getProfileInfo(oauth2Client) {
   
   return new Promise((resolve, reject) => {
       

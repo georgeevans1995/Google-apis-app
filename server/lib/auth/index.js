@@ -8,10 +8,15 @@
 
 var fs = require('fs');
 import googleAuth from 'google-auth-library';
-
+import users from '../cloudant/usersdb.js';
 import credentials from './client_secret.json';
 import Promise from 'bluebird'; 
-import {storeToken, getToken, updateToken, removeApp} from '../../db.js'
+
+import { getProfileInfo } from '../oauth2';
+
+var getUser = Promise.promisify(users.get.bind(users));
+var removeUser = Promise.promisify(users.remove.bind(users));
+var storeUser = Promise.promisify(users.put.bind(users));
 
 var clientSecret = credentials.web.client_secret,
     clientId = credentials.web.client_id,
@@ -21,6 +26,7 @@ var clientSecret = credentials.web.client_secret,
 
 
 export function getInstallUrl(scopes) {
+  
   return new Promise( (resolve, reject) => {
 
     // authorize app through a url redirect
@@ -44,18 +50,19 @@ export function authorize(key) {
   return new Promise( (resolve, reject) => {
 
     // Get previously stored token
-    getToken(key)
-    .then( tokenObject => {
-        oauth2Client.credentials = tokenObject.token.credentials;
-        var currentToken = tokenObject.token.credentials.access_token;
+    getUser(key)
+    .then( userInfo => {
+        oauth2Client.credentials = userInfo.token.credentials;
+        var currentToken = userInfo.token.credentials.access_token;
 
         // set the access token for the oauth2 client
         oauth2Client.getAccessToken( (err, access_token, response) => {
           
           // if its changed store it to the db
           if(access_token != currentToken) {
-            updateToken(key, oauth2Client) 
-            .then( key => {
+            userInfo.credentials.access_token = access_token;
+            storeUser(userInfo)
+            .then( () => {
               resolve(oauth2Client);
             })
           } else {
@@ -86,12 +93,23 @@ export function createNewToken(code) {
         }
         oauth2Client.credentials = token;
 
-        storeToken(oauth2Client).then( key => {
-          resolve(key);
-        }).catch( error => {
+        getProfileInfo(oauth2Client)
+        .then( (user) => {
+          
+          var userInfo = {
+            _id: user.id,
+            user: user, 
+            credentials: oauth2Client.credentials
+          }
+          return storeUser(userInfo)
+        })
+        .then( (user) => {
+          resolve(user);
+        })
+        .catch( error => {
           reject(error);
-        });
-        
+        })
+      
       });
     });
 
@@ -101,16 +119,17 @@ export function removeAppCredentials(key) {
   return new Promise( (resolve, reject) => {
     
     // Check if we have previously stored a token.
-    getToken(key)
-    .then( tokenObject => {
-        oauth2Client.credentials = tokenObject.token.credentials;
+    getUser(key)
+    .then( userInfo => {
+      console.log(userInfo);
+        oauth2Client.credentials = userInfo.credentials;
 
         oauth2Client.revokeCredentials( function(err) {
           if(err) {
             reject(err);
           }
         });
-        return removeApp(key)
+        return removeUser(userInfo)
     })
     .then( (message) => {
           resolve({
