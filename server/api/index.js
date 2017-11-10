@@ -11,7 +11,7 @@ export default ({ config, db }) => {
 	let api = Router();
 
 	// allow files to come through on the upload route
-	api.use('/drive/upload', formidable({
+	api.use('/upload', formidable({
 		multiples: true
 	}));
 

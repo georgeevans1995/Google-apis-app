@@ -16,6 +16,7 @@ export function saveFiles(key, files, folder) {
 	return new Promise((resolve, reject) => {
 		
 		authorize(key).then( (auth) => {
+			console.log(auth);
 			var drive = google.drive({ version: 'v3', auth: auth });
 			files = Array.isArray(files) ? files : [files];
 

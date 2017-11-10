@@ -52,9 +52,10 @@ export function authorize(key) {
     // Get previously stored token
     getUser(key)
     .then( userInfo => {
-        oauth2Client.credentials = userInfo.token.credentials;
-        var currentToken = userInfo.token.credentials.access_token;
 
+        oauth2Client.credentials = userInfo.credentials;
+        var currentToken = userInfo.credentials.access_token;
+        
         // set the access token for the oauth2 client
         oauth2Client.getAccessToken( (err, access_token, response) => {
           
