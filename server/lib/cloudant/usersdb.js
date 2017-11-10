@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-'use strict';
+import dotenv from 'dotenv'
+dotenv.config()
 
 var extend = require('extend');
 
+console.log(process.env.CLOUDANT_PASSWORD);
 
-var me = "76da1710-a109-4097-a67c-a423e405e859-bluemix";         // Substitute with your Cloudant user account.
-var otherUsername = "beenonverecrefterstoncel"; // Substitute with some other Cloudant user account.
-var otherPassword = '5fc9a8377c632c35262e033b531609082a2a5313';
+var me = process.env.CLOUDANT_URL;         // Substitute with your Cloudant user account.
+var otherUsername = process.env.CLOUDANT_USER; // Substitute with some other Cloudant user account.
+var otherPassword = process.env.CLOUDANT_PASSWORD;
 var cloudant = require('cloudant')({account:me, username:otherUsername, password:otherPassword});
 
 var dbname = 'users';
